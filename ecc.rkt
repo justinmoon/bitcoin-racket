@@ -44,5 +44,12 @@
                  (fe-prime fe-one))
   )
 
+(define (fe-expt fe exponent)
+  (define prime (fe-prime fe))
+  (field-element
+                 (modulo (expt (fe-number fe) exponent) prime)
+                 prime)
+  )
+
 ;;; Exports
-(provide field-element fe-equal fe-number fe-prime fe-plus fe-minus fe-multiply)
+(provide field-element fe-equal fe-number fe-prime fe-plus fe-minus fe-multiply fe-expt)

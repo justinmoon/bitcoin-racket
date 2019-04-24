@@ -53,6 +53,12 @@
        exn:fail:contract?
        (lambda () (fe-multiply (field-element 1 2) (field-element 1 3))))
     )
+
+   (test-case
+    "Field element exponentiation"
+      (check-equal? (fe-expt (field-element 17 31) 3)
+                    (field-element 15 31))
+    )
    
    ))
 
