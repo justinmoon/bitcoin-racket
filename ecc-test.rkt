@@ -22,11 +22,28 @@
     "Field element addition"
     (let ([a (field-element 12 17)]
           [b (field-element 13 17)]
-          [c (field-element 8 17)])
-      (check-equal? (fe-plus a b) c))
-   
+          [c (field-element 8 17)]
+          [d (field-element 8 16)])
+      (check-equal? (fe-plus a b) c)
+     (check-exn
+      exn:fail:contract?
+      (lambda () (fe-plus a d)))
+     )
     )
 
+   (test-case
+    "Field element subtraction"
+      (check-equal? (fe-minus (field-element 29 31)
+                              (field-element 4 31))
+                    (field-element 25 31))
+      (check-equal? (fe-minus (field-element 15 31)
+                              (field-element 30 31))
+                    (field-element 16 31))
+      (check-exn
+       exn:fail:contract?
+       (lambda () (fe-minus (field-element 1 2) (field-element 1 3))))
+    )
+   
    ))
 
 (run-tests file-tests)
