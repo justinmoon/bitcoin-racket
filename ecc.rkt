@@ -2,14 +2,24 @@
 
 
 ;;; Field Elements
+;;; (Should I use structs instead? https://docs.racket-lang.org/guide/define-struct.html)
+(define (field-element number prime) (cons number prime))
 
-(define (make-field-element number prime) (cons number prime))
-(define (number field-element) (car field-element))
-(define (prime field-element) (cdr field-element))
-(define (equal field-element-one field-element-two)
-  (and (= (number field-element-one) (number field-element-two))
-       (= (prime field-element-one) (prime field-element-two))))
+(define (fe-number fe) (car fe))
+
+(define (fe-prime fe) (cdr fe))
+
+(define (fe-equal fe-one fe-two)
+  (and (= (fe-number fe-one) (fe-number fe-two))
+       (= (fe-prime fe-one) (fe-prime fe-two))))
+
+(define (fe-plus fe-one fe-two)
+  (field-element
+                 (modulo (+ (fe-number fe-one) (fe-number fe-two))
+                         (fe-prime fe-one))
+                 (fe-prime fe-one))
+  )
 
 
 ;;; Exports
-(provide make-field-element equal number prime)
+(provide field-element fe-equal fe-number fe-prime fe-plus)
