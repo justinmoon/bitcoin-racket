@@ -43,6 +43,16 @@
        exn:fail:contract?
        (lambda () (fe-minus (field-element 1 2) (field-element 1 3))))
     )
+
+   (test-case
+    "Field element multiplication"
+      (check-equal? (fe-multiply (field-element 24 31)
+                                 (field-element 19 31))
+                    (field-element 22 31))
+      (check-exn
+       exn:fail:contract?
+       (lambda () (fe-multiply (field-element 1 2) (field-element 1 3))))
+    )
    
    ))
 

@@ -36,5 +36,13 @@
                  (fe-prime fe-one))
   )
 
+(define (fe-multiply fe-one fe-two)
+  (fe-check-prime fe-one fe-two 'fe-multiply)
+  (field-element
+                 (modulo (* (fe-number fe-one) (fe-number fe-two))
+                         (fe-prime fe-one))
+                 (fe-prime fe-one))
+  )
+
 ;;; Exports
-(provide field-element fe-equal fe-number fe-prime fe-plus fe-minus)
+(provide field-element fe-equal fe-number fe-prime fe-plus fe-minus fe-multiply)
