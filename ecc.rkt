@@ -59,5 +59,14 @@
                  prime)
   )
 
+(define (fe-divide fe-one fe-two)
+  (fe-check-prime fe-one fe-two 'fe-divide)
+  (define fe-two-inv (expt (fe-number fe-two) (- (fe-prime fe-two) 2)))
+  (field-element
+                 (modulo (* (fe-number fe-one) fe-two-inv)
+                         (fe-prime fe-one))
+                 (fe-prime fe-one))
+  )
+
 ;;; Exports
 (provide field-element fe-equal fe-number fe-prime fe-plus fe-minus fe-multiply fe-expt fe-divide)

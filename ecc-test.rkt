@@ -61,6 +61,15 @@
       (check-equal? (fe-expt (field-element 17 31) -3)
                     (field-element 29 31))
     )
+
+   (test-case
+    "Field element division"
+      (check-equal? (fe-divide (field-element 3 31) (field-element 24 31))
+                    (field-element 4 31))
+      (check-exn
+       exn:fail:contract?
+       (lambda () (fe-divide (field-element 1 2) (field-element 1 3))))
+    )
    
    ))
 
