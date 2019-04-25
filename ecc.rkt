@@ -46,10 +46,18 @@
 
 (define (fe-expt fe exponent)
   (define prime (fe-prime fe))
+
+  ; Some hacks to ensure exponent is positive
+  (define (get-positive-exponent n)
+    (if (>= n 0)
+        n
+        (get-positive-exponent (+ n (- prime 1)))))
+  (define positive-exponent (get-positive-exponent exponent))
+
   (field-element
-                 (modulo (expt (fe-number fe) exponent) prime)
+                 (modulo (expt (fe-number fe) positive-exponent) prime)
                  prime)
   )
 
 ;;; Exports
-(provide field-element fe-equal fe-number fe-prime fe-plus fe-minus fe-multiply fe-expt)
+(provide field-element fe-equal fe-number fe-prime fe-plus fe-minus fe-multiply fe-expt fe-divide)

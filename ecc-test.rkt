@@ -58,6 +58,8 @@
     "Field element exponentiation"
       (check-equal? (fe-expt (field-element 17 31) 3)
                     (field-element 15 31))
+      (check-equal? (fe-expt (field-element 17 31) -3)
+                    (field-element 29 31))
     )
    
    ))
