@@ -74,8 +74,14 @@
     [(= (point-x p2) +inf.0) p1]
     ; p1 is p2 reflected across x-axis
     [(= (point-x p1) (point-x p2)) (point +inf.0 +inf.0 (point-a p1) (point-b p1))]
-
-    
+    ; p1 and p2 have differnt x values
+    [(not (= (point-x p1) (point-x p2)))
+     (let ()
+       (define s (/ (- (point-y p2) (point-y p1))
+                    (- (point-x p2) (point-x p1))))
+       (define x (- (expt s 2) (point-x p1) (point-x p2)))
+       (define y (- (* s (- (point-x p1) x)) (point-y p1)))
+      (point x y (point-a p1) (point-b p2)))]
     ))
 
 ;;; Exports
