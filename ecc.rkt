@@ -70,10 +70,13 @@
   (cond
     ; p1 is point-at-infinity
     [(= (point-x p1) +inf.0) p2]
+
     ; p1 is point-at-infinity
     [(= (point-x p2) +inf.0) p1]
+
     ; p1 is p2 reflected across x-axis
     [(= (point-x p1) (point-x p2)) (point +inf.0 +inf.0 (point-a p1) (point-b p1))]
+
     ; p1 and p2 have differnt x values
     [(not (= (point-x p1) (point-x p2)))
      (let ()
@@ -82,6 +85,12 @@
        (define x (- (expt s 2) (point-x p1) (point-x p2)))
        (define y (- (* s (- (point-x p1) x)) (point-y p1)))
       (point x y (point-a p1) (point-b p2)))]
+
+    ; tangent on x-axis
+    [(and (= p1 p2)
+          (= (point-y p1) (* 0 (point-x p1))))
+     (point +inf.0 +inf.0 (point-a p1) (point-b p1))]
+    
     ))
 
 ;;; Exports
