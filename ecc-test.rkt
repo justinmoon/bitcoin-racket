@@ -70,6 +70,14 @@
        exn:fail:contract?
        (lambda () (field-element-divide (field-element 1 2) (field-element 1 3))))
     )
+
+   (test-case
+    "Point addition"
+    (let ([point-at-infinity (point +inf.0 +inf.0 5 7)]
+          [p (point 3 -7 5 7)])
+      (check-equal? (point-add p point-at-infinity) p)
+      (check-equal? (point-add point-at-infinity p) p)
+    ))
    
    ))
 

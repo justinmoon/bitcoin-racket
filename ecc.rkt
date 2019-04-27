@@ -2,8 +2,9 @@
 
 
 ;;; Field Elements
-;;; (Should I use structs instead? https://docs.racket-lang.org/guide/define-struct.html)
 (struct field-element (number prime) #:transparent)
+
+
 
 (define (field-element-check-prime fe-one fe-two caller)
   ; the "caller" variable is a hack ...
@@ -61,6 +62,20 @@
                  (field-element-prime fe-one))
   )
 
+;;; Points
+;;; FIXME: how to enforce values to `point`? A contract?
+(struct point (x y a b) #:transparent)
+
+(define (point-add p1 p2)
+  (cond
+    [(= (point-x p1) +inf.0) p2]
+    [(= (point-x p2) +inf.0) p1]
+
+    ))
+
 ;;; Exports
 (provide field-element field-element-add field-element-subtract field-element-multiply
-         field-element-expt field-element-divide)
+         field-element-expt field-element-divide
+
+         point point-add
+         )
