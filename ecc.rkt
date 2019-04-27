@@ -1,73 +1,136 @@
-#lang racket/base
+#lang racket
+(require racket/generic
+         (only-in racket/base [+ racket:+])
+         (only-in racket/base [- racket:-])
+         (only-in racket/base [* racket:*])
+         (only-in racket/base [/ racket:/])
+         (only-in racket/base [expt racket:expt])
+         )
 
+(define-generics addable
+  (add addable _))
 
-;;; Field Elements
-(struct field-element (number prime) #:transparent)
+(define-generics subtractable
+  (subtract subtractable _))
 
+(define-generics multiplicible
+  (multiply multiplicible _))
 
+(define-generics exponentiatable
+  (exponentiate exponentiatable _))
 
-(define (field-element-check-prime fe-one fe-two caller)
+(define-generics divisible
+  (divide divisible _))
+
+(define (enforce-prime-constraint fe1 fe2 caller)
   ; the "caller" variable is a hack ...
-  (if (not (= (field-element-prime fe-one) (field-element-prime fe-two)))
+  (if (not (= (field-element-prime fe1) (field-element-prime fe2)))
       (raise-argument-error caller "field elements with matching primes"
-                            (cons (field-element-prime fe-one) (field-element-prime fe-two)))
+                            (cons (field-element-prime fe1) (field-element-prime fe2)))
       "field elements have matching primes"))
 
-(define (field-element-add fe-one fe-two)
-  (field-element-check-prime fe-one fe-two 'field-element-add)
-  (field-element
-                 (modulo (+ (field-element-number fe-one) (field-element-number fe-two))
-                         (field-element-prime fe-one))
-                 (field-element-prime fe-one))
-  )
-
-(define (field-element-subtract fe-one fe-two)
-  (field-element-check-prime fe-one fe-two 'field-element-subtract)
-  (field-element
-                 (modulo (- (field-element-number fe-one) (field-element-number fe-two))
-                         (field-element-prime fe-one))
-                 (field-element-prime fe-one))
-  )
-
-(define (field-element-multiply fe-one fe-two)
-  (field-element-check-prime fe-one fe-two 'field-element-multiply)
-  (field-element
-                 (modulo (* (field-element-number fe-one) (field-element-number fe-two))
-                         (field-element-prime fe-one))
-                 (field-element-prime fe-one))
-  )
-
-(define (field-element-expt fe exponent)
-  (define prime (field-element-prime fe))
-
-  ; Some hacks to ensure exponent is positive
-  (define (get-positive-exponent n)
-    (if (>= n 0)
-        n
-        (get-positive-exponent (+ n (- prime 1)))))
-  (define positive-exponent (get-positive-exponent exponent))
-
-  (field-element
-                 (modulo (expt (field-element-number fe) positive-exponent) prime)
-                 prime)
-  )
-
-(define (field-element-divide fe-one fe-two)
-  (field-element-check-prime fe-one fe-two 'field-element-divide)
-  (define fe-two-inv (expt (field-element-number fe-two)
-                           (- (field-element-prime fe-two) 2)))
-  (field-element
-                 (modulo (* (field-element-number fe-one) fe-two-inv)
-                         (field-element-prime fe-one))
-                 (field-element-prime fe-one))
-  )
-
-;;; Points
-;;; FIXME: how to enforce values to `point`? A contract?
-(struct point (x y a b) #:transparent)
-
-(define (point-add p1 p2)
+; FIXME: these functions should all accept arbitrary many inputs
+(define (+ x y)
   (cond
+    [(and (number? x) (number? y)) (racket:+ x y)]    
+    [(or
+      (and (field-element? x) (field-element? y))
+      (and (point? x) (point? y)))
+     (add x y)]
+    [else (error 'add "Can't add")]))      ; TODO: better error message
+
+(define (- x y)
+  (cond
+    [(and (number? x) (number? y)) (racket:- x y)]
+    [(or
+      (and (field-element? x) (field-element? y))
+      (and (point? x) (point? y)))
+     (subtract x y)]
+    [else (error 'add "Can't subtract")]))      ; TODO: better error message
+
+(define (* x y)
+  (cond
+    [(and (number? x) (number? y)) (racket:* x y)]
+    [(or
+      (and (field-element? x) (field-element? y))
+      (and (point? x) (number? y)))
+     (multiply x y)]
+    [else (error 'add "Can't multiply")]))      ; TODO: better error message
+
+(define (expt x exponent)
+  (cond
+    [(and (number? x) (number? exponent)) (racket:expt x exponent)]
+    [(and (field-element? x) (number? exponent))
+     (exponentiate x exponent)]
+    [else (error 'add "Can't exponentiate")]))      ; TODO: better error message
+
+(define (/ x y)
+  (cond
+    [(and (number? x) (number? y)) (racket:/ x y)]
+    [(and (field-element? x) (field-element? y))
+     (divide x y)]
+    [else (error 'add "Can't divide")]))      ; TODO: better error message
+
+(struct field-element (number prime)
+  #:transparent
+  
+  #:methods gen:addable
+  [(define (add fe1 fe2)
+     (enforce-prime-constraint fe1 fe2 "+")
+     (field-element (modulo (+ (field-element-number fe1)
+                               (field-element-number fe2))
+                            (field-element-prime fe1))
+                    (field-element-prime fe1)))]
+  #:methods gen:subtractable
+  [(define (subtract fe1 fe2)
+     (enforce-prime-constraint fe1 fe2 "-")
+     (field-element (modulo (- (field-element-number fe1)
+                               (field-element-number fe2))
+                            (field-element-prime fe1))
+                    (field-element-prime fe1)))]
+  #:methods gen:multiplicible
+  [(define (multiply fe1 fe2)
+     (enforce-prime-constraint fe1 fe2 "*")
+     (field-element (modulo (* (field-element-number fe1)
+                               (field-element-number fe2))
+                            (field-element-prime fe1))
+                    (field-element-prime fe1)))]
+  #:methods gen:exponentiatable
+  [(define (exponentiate fe exponent)
+     (define prime (field-element-prime fe))
+
+     ; Some hacks to ensure exponent is positive
+     (define (get-positive-exponent n)
+       (if (>= n 0)
+           n
+           (get-positive-exponent (+ n (- prime 1)))))
+     (define positive-exponent (get-positive-exponent exponent))
+
+     (field-element
+      (modulo (expt (field-element-number fe) positive-exponent) prime)
+      prime))]
+  #:methods gen:divisible
+  [(define (divide fe1 fe2)
+     (enforce-prime-constraint fe1 fe2 "/")
+     (define inv (expt (field-element-number fe2)
+                              (- (field-element-prime fe2) 2)))
+     (field-element
+      (modulo (* (field-element-number fe1) inv)
+              (field-element-prime fe1))
+      (field-element-prime fe1)))]
+  )
+
+(struct point (x y a b)
+  #:transparent
+
+  #:guard (λ (x y a b name)
+            (unless (= (* y y) (+ (+ (expt x 3) (* a x)) b))    ; hack: + only takes 2 args ...
+              (error 'point "not a valid point"))
+            (values x y a b))
+  
+  #:methods gen:addable
+  [(define (add p1 p2)
+(cond
     ; p1 is point-at-infinity
     [(= (point-x p1) +inf.0) p2]
 
@@ -79,12 +142,12 @@
           (not (= (point-y p1) (point-y p2))))
      (point +inf.0 +inf.0 (point-a p1) (point-b p1))]
 
-    ; p1 and p2 have differnt x values
+    ; p1 and p2 have different x values
     [(not (= (point-x p1) (point-x p2)))
      (let ()
        (define s (/ (- (point-y p2) (point-y p1))
                     (- (point-x p2) (point-x p1))))
-       (define x (- (expt s 2) (point-x p1) (point-x p2)))
+       (define x (- (- (expt s 2) (point-x p1)) (point-x p2)))  ; hack: - only takes 2 args
        (define y (- (* s (- (point-x p1) x)) (point-y p1)))
       (point x y (point-a p1) (point-b p2)))]
 
@@ -103,11 +166,16 @@
        (define y (- (* s (- (point-x p1) x))
                     (point-y p1)))
        (point x y (point-a p1) (point-b p1)))]
-    ))
+    ))]
+  
+  
+  #:methods gen:multiplicible
+  [(define (multiply p1 coefficient)
+     (define (multiply-iter coef result)
+       (if (= coef 0)
+           result
+           (multiply-iter (- coef 1) (+ result p1))))
+     (multiply-iter coefficient (point 0 0)))]
+  )
 
-;;; Exports
-(provide field-element field-element-add field-element-subtract field-element-multiply
-         field-element-expt field-element-divide
-
-         point point-add
-         )
+(provide field-element point + - * / expt)
