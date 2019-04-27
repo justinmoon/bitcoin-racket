@@ -15,7 +15,7 @@
           [b (field-element 2 31)]
           [c (field-element 15 31)])
       (check-equal? a b)
-      (check-equal? a c))
+      (check-not-equal? a c))
     )
 
    (test-case
