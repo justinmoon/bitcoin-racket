@@ -3,49 +3,41 @@
 
 ;;; Field Elements
 ;;; (Should I use structs instead? https://docs.racket-lang.org/guide/define-struct.html)
-(define (field-element number prime) (cons number prime))
+(struct field-element (number prime) #:transparent)
 
-(define (fe-number fe) (car fe))
-
-(define (fe-prime fe) (cdr fe))
-
-(define (fe-equal fe-one fe-two)
-  (and (= (fe-number fe-one) (fe-number fe-two))
-       (= (fe-prime fe-one) (fe-prime fe-two))))
-
-(define (fe-check-prime fe-one fe-two caller)
+(define (field-element-check-prime fe-one fe-two caller)
   ; the "caller" variable is a hack ...
-  (if (not (= (fe-prime fe-one) (fe-prime fe-two)))
+  (if (not (= (field-element-prime fe-one) (field-element-prime fe-two)))
       (raise-argument-error caller "field elements with matching primes"
-                            (cons (fe-prime fe-one) (fe-prime fe-two)))
+                            (cons (field-element-prime fe-one) (field-element-prime fe-two)))
       "field elements have matching primes"))
 
-(define (fe-plus fe-one fe-two)
-  (fe-check-prime fe-one fe-two 'fe-plus)
+(define (field-element-add fe-one fe-two)
+  (field-element-check-prime fe-one fe-two 'field-element-add)
   (field-element
-                 (modulo (+ (fe-number fe-one) (fe-number fe-two))
-                         (fe-prime fe-one))
-                 (fe-prime fe-one))
+                 (modulo (+ (field-element-number fe-one) (field-element-number fe-two))
+                         (field-element-prime fe-one))
+                 (field-element-prime fe-one))
   )
 
-(define (fe-minus fe-one fe-two)
-  (fe-check-prime fe-one fe-two 'fe-minus)
+(define (field-element-subtract fe-one fe-two)
+  (field-element-check-prime fe-one fe-two 'field-element-subtract)
   (field-element
-                 (modulo (- (fe-number fe-one) (fe-number fe-two))
-                         (fe-prime fe-one))
-                 (fe-prime fe-one))
+                 (modulo (- (field-element-number fe-one) (field-element-number fe-two))
+                         (field-element-prime fe-one))
+                 (field-element-prime fe-one))
   )
 
-(define (fe-multiply fe-one fe-two)
-  (fe-check-prime fe-one fe-two 'fe-multiply)
+(define (field-element-multiply fe-one fe-two)
+  (field-element-check-prime fe-one fe-two 'field-element-multiply)
   (field-element
-                 (modulo (* (fe-number fe-one) (fe-number fe-two))
-                         (fe-prime fe-one))
-                 (fe-prime fe-one))
+                 (modulo (* (field-element-number fe-one) (field-element-number fe-two))
+                         (field-element-prime fe-one))
+                 (field-element-prime fe-one))
   )
 
-(define (fe-expt fe exponent)
-  (define prime (fe-prime fe))
+(define (field-element-expt fe exponent)
+  (define prime (field-element-prime fe))
 
   ; Some hacks to ensure exponent is positive
   (define (get-positive-exponent n)
@@ -55,18 +47,20 @@
   (define positive-exponent (get-positive-exponent exponent))
 
   (field-element
-                 (modulo (expt (fe-number fe) positive-exponent) prime)
+                 (modulo (expt (field-element-number fe) positive-exponent) prime)
                  prime)
   )
 
-(define (fe-divide fe-one fe-two)
-  (fe-check-prime fe-one fe-two 'fe-divide)
-  (define fe-two-inv (expt (fe-number fe-two) (- (fe-prime fe-two) 2)))
+(define (field-element-divide fe-one fe-two)
+  (field-element-check-prime fe-one fe-two 'field-element-divide)
+  (define fe-two-inv (expt (field-element-number fe-two)
+                           (- (field-element-prime fe-two) 2)))
   (field-element
-                 (modulo (* (fe-number fe-one) fe-two-inv)
-                         (fe-prime fe-one))
-                 (fe-prime fe-one))
+                 (modulo (* (field-element-number fe-one) fe-two-inv)
+                         (field-element-prime fe-one))
+                 (field-element-prime fe-one))
   )
 
 ;;; Exports
-(provide field-element fe-equal fe-number fe-prime fe-plus fe-minus fe-multiply fe-expt fe-divide)
+(provide field-element field-element-add field-element-subtract field-element-multiply
+         field-element-expt field-element-divide)
