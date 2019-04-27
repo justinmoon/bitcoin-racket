@@ -77,15 +77,24 @@
           [p1 (point 3 -7 5 7)]
           [p2 (point 3 7 5 7)]
           [p3 (point -1 -1 5 7)]
-          [p4 (point 2 -5 5 7)])
+          [p4 (point 2 -5 5 7)]
+          [p5 (point -1 1 5 7)]
+          [p6 (point 18 -77 5 7)])
+
       ; first argument is point-at-infinity
       (check-equal? (point-add p1 point-at-infinity) p1)
+
       ; first argument is point-at-infinity
       (check-equal? (point-add point-at-infinity p1) p1)
+
       ; first argument is second argument reflected across x-axis
       (check-equal? (point-add p1 p2) point-at-infinity)
+
       ; different x-coordinates
       (check-equal? (point-add p2 p3) p4)
+
+      ; arguments equal
+      (check-equal? (point-add p5 p5) p6)
     ))
    
    ))
