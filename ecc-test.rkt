@@ -70,6 +70,12 @@
     )
 
    (test-case
+    "Point guard"
+    (check-exn
+     exn:fail?  ; Is there a more precis exception I could use?
+     (lambda () (point 2 2 0 0))))
+
+   (test-case
     "Point addition"
     (let ([point-at-infinity (point +inf.0 +inf.0 5 7)]
           [p1 (point 3 -7 5 7)]
