@@ -6,6 +6,7 @@
          (only-in racket/base [/ racket:/])
          (only-in racket/base [expt racket:expt])
          )
+(require math)
 
 (define-generics addable
   (add addable _))
@@ -62,6 +63,8 @@
     ; points
     [(and (point? x) (number? y))
      (multiply x y)]
+    [(and (number? x) (point? y))
+     (multiply y x)]
     [else (error 'add "Can't multiply"
                  '("args" multi)
                  (list x y))]))      ; TODO: better error message
@@ -118,15 +121,15 @@
            n
            (get-positive-exponent (+ n (- prime 1)))))
      (define positive-exponent (get-positive-exponent exponent))
-
      (field-element
       (modulo (expt (field-element-number fe) positive-exponent) prime)
       prime))]
   #:methods gen:divisible
   [(define (divide fe1 fe2)
      (enforce-prime-constraint fe1 fe2 "/")
-     (define inv (expt (field-element-number fe2)
-                              (- (field-element-prime fe2) 2)))
+     (define inv (modular-expt (field-element-number fe2)
+                               (- (field-element-prime fe2) 2)
+                               (field-element-prime fe1)))
      (field-element
       (modulo (* (field-element-number fe1) inv)
               (field-element-prime fe1))
@@ -173,36 +176,31 @@
     ; p1 = p2
     [(equal? p1 p2)
      (let ()
-       (display 0)
        ; FIXME: this takes forever with 256 bit numbers ...
        (define s (/ (+ (* (expt (point-x p1) 2) 3)
                      (point-a p1))
                   (* (point-y p1) 2)))
-       (display 1)
        (define x (- (expt s 2) (* 2 (point-x p1))))
-       (display 2)
        (define y (- (* (- (point-x p1) x) s)
                     (point-y p1)))
-       (display 3)
        (point x y (point-a p1) (point-b p1)))]
     ))]
   
   
   #:methods gen:multiplicible
-  [(define (multiply p1 coefficient)
-     (display coefficient)(newline)
-     (define zero (point +inf.0 +inf.0 (point-a p1) (point-b p1)))
-     ;(display zero)
+  [(define (multiply p coefficient)
+     (define zero (point +inf.0 +inf.0 (point-a p) (point-b p)))
      ; TODO: bit flipping trick here ... best shot at speeding this up ...
-     (define (multiply-iter coef current result)
-       (display coef)(newline)
-       (if (bitwise-and coef 1)
-           (set! result (+ result current))
-           (set! result result))
+     (define (fast-multiply coef current result)
        (if (= coef 0)
            result
-           (multiply-iter (arithmetic-shift coef -1) (+ current current) (+ result p1))))
-     (multiply-iter coefficient zero))]
+           (fast-multiply (arithmetic-shift coef -1)
+                          (+ current current)
+                          (if (= (bitwise-and coef 1) 1)
+                              (+ result current)
+                              result))))
+     (fast-multiply coefficient p zero))]
+       
   )
 
 (define P (- (- (expt 2 256)
@@ -227,7 +225,9 @@
 
 (define INF (s256-point +inf.0 +inf.0))
 
-(display (* G 2))
-(display "done")
+;(display (* G 2))
 
-(provide field-element point + - * / expt)
+(provide field-element point + - * / expt N G P
+
+         point-x  ; yuck
+         )

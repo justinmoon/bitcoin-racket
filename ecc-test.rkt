@@ -106,12 +106,42 @@
       (define prime 223)
       (define a (field-element 0 prime))
       (define b (field-element 7 prime))
+      
       (define p1 (point (field-element 192 prime) (field-element 105 prime) a b))
       (define p2 (point (field-element 17 prime) (field-element 56 prime) a b))
       (define p3 (point (field-element 170 prime) (field-element 142 prime) a b))
-
       (check-equal? (+ p1 p2) p3)
+
+            
+      (define p4 (point (field-element 47 prime) (field-element 71 prime) a b))
+      (define p5 (point (field-element 117 prime) (field-element 141 prime) a b))
+      (define p6 (point (field-element 60 prime) (field-element 139 prime) a b))
+      (check-equal? (+ p4 p5) p6)
+
+      (define p7 (point (field-element 143 prime) (field-element 98 prime) a b))
+      (define p8 (point (field-element 76 prime) (field-element 66 prime) a b))
+      (define p9 (point (field-element 47 prime) (field-element 71 prime) a b))
+      (check-equal? (+ p7 p8) p9)
     )
+
+   (test-case
+    "scalar*point"
+
+
+      (define prime 223)
+      (define a (field-element 0 prime))
+      (define b (field-element 7 prime))
+      
+      (check-equal? (* 2 (point (field-element 192 prime) (field-element 105 prime) a b))
+                    (point (field-element 49 prime) (field-element 71 prime) a b))
+
+      (check-equal? (* 21 (point (field-element 47 prime)(field-element 71 prime) a b))
+                    (point +inf.0 +inf.0 a b))
+      )
+   
+   (test-case
+    "s256 order"
+    (check-equal? (point-x (* G N)) +inf.0))
    
    ))
 
