@@ -76,7 +76,7 @@
      (lambda () (point 2 2 0 0))))
 
    (test-case
-    "Point addition"
+    "Point addition with integers"
     (let ([point-at-infinity (point +inf.0 +inf.0 5 7)]
           [p1 (point 3 -7 5 7)]
           [p2 (point 3 7 5 7)]
@@ -99,7 +99,20 @@
 
       ; arguments equal
       (check-equal? (+ p5 p5) p6)
-    ))   
+    ))
+
+   (test-case
+    "Point addition with field elements"
+      (define prime 223)
+      (define a (field-element 0 prime))
+      (define b (field-element 7 prime))
+      (define p1 (point (field-element 192 prime) (field-element 105 prime) a b))
+      (define p2 (point (field-element 17 prime) (field-element 56 prime) a b))
+      (define p3 (point (field-element 170 prime) (field-element 142 prime) a b))
+
+      (check-equal? (+ p1 p2) p3)
+    )
+   
    ))
 
 (run-tests file-tests)

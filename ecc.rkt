@@ -124,7 +124,7 @@
   #:transparent
 
   #:guard (λ (x y a b name)
-            (unless (= (* y y) (+ (+ (expt x 3) (* a x)) b))    ; hack: + only takes 2 args ...
+            (unless (equal? (* y y) (+ (+ (expt x 3) (* a x)) b))    ; hack: + only takes 2 args ...
               (error 'point "not a valid point"))
             (values x y a b))
   
@@ -132,18 +132,18 @@
   [(define (add p1 p2)
 (cond
     ; p1 is point-at-infinity
-    [(= (point-x p1) +inf.0) p2]
+    [(equal? (point-x p1) +inf.0) p2]
 
     ; p1 is point-at-infinity
-    [(= (point-x p2) +inf.0) p1]
+    [(equal? (point-x p2) +inf.0) p1]
 
     ; p1 is p2 reflected across x-axis
-    [(and (= (point-x p1) (point-x p2))
+    [(and (equal? (point-x p1) (point-x p2))
           (not (= (point-y p1) (point-y p2))))
      (point +inf.0 +inf.0 (point-a p1) (point-b p1))]
 
     ; p1 and p2 have different x values
-    [(not (= (point-x p1) (point-x p2)))
+    [(not (equal? (point-x p1) (point-x p2)))
      (let ()
        (define s (/ (- (point-y p2) (point-y p1))
                     (- (point-x p2) (point-x p1))))
