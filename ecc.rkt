@@ -37,7 +37,8 @@
       (and (field-element? x) (field-element? y))
       (and (point? x) (point? y)))
      (add x y)]
-    [else (error 'add "Can't add")]))      ; TODO: better error message
+    [else (error 'add "
+ add")]))      ; TODO: better error message
 
 (define (- x y)
   (cond
@@ -50,12 +51,20 @@
 
 (define (* x y)
   (cond
+    ; numbers
     [(and (number? x) (number? y)) (racket:* x y)]
-    [(or
-      (and (field-element? x) (field-element? y))
-      (and (point? x) (number? y)))
+    ; field elements
+    [(and (field-element? x) (field-element? y)) (multiply x y)]
+    [(and (number? x) (field-element? y))
+     (multiply (field-element x (field-element-prime y)) y)]
+    [(and (field-element? x) (number? y))
+     (multiply x (field-element y (field-element-prime x)))]
+    ; points
+    [(and (point? x) (number? y))
      (multiply x y)]
-    [else (error 'add "Can't multiply")]))      ; TODO: better error message
+    [else (error 'add "Can't multiply"
+                 '("args" multi)
+                 (list x y))]))      ; TODO: better error message
 
 (define (expt x exponent)
   (cond
@@ -90,11 +99,15 @@
                     (field-element-prime fe1)))]
   #:methods gen:multiplicible
   [(define (multiply fe1 fe2)
+     ;;; FIXME: python has __mul__ and __rmul__ ...
+     ;;; we basically only handle __mul__
+     ;;; need to implement integer multiplication                    
      (enforce-prime-constraint fe1 fe2 "*")
      (field-element (modulo (* (field-element-number fe1)
                                (field-element-number fe2))
                             (field-element-prime fe1))
                     (field-element-prime fe1)))]
+  
   #:methods gen:exponentiatable
   [(define (exponentiate fe exponent)
      (define prime (field-element-prime fe))
@@ -124,8 +137,9 @@
   #:transparent
 
   #:guard (λ (x y a b name)
-            (unless (equal? (* y y) (+ (+ (expt x 3) (* a x)) b))    ; hack: + only takes 2 args ...
-              (error 'point "not a valid point"))
+            (unless (or (and (equal? x +inf.0) (equal? y +inf.0))
+                        (equal? (* y y) (+ (+ (expt x 3) (* a x)) b)))    ; hack: + only takes 2 args ...
+            (error 'point "not a valid point"))
             (values x y a b))
   
   #:methods gen:addable
@@ -139,7 +153,7 @@
 
     ; p1 is p2 reflected across x-axis
     [(and (equal? (point-x p1) (point-x p2))
-          (not (= (point-y p1) (point-y p2))))
+          (not (equal? (point-y p1) (point-y p2))))
      (point +inf.0 +inf.0 (point-a p1) (point-b p1))]
 
     ; p1 and p2 have different x values
@@ -159,23 +173,61 @@
     ; p1 = p2
     [(equal? p1 p2)
      (let ()
-       (define s (/ (+ (* 3 (expt (point-x p1) 2))
+       (display 0)
+       ; FIXME: this takes forever with 256 bit numbers ...
+       (define s (/ (+ (* (expt (point-x p1) 2) 3)
                      (point-a p1))
-                  (* 2 (point-y p1))))
+                  (* (point-y p1) 2)))
+       (display 1)
        (define x (- (expt s 2) (* 2 (point-x p1))))
-       (define y (- (* s (- (point-x p1) x))
+       (display 2)
+       (define y (- (* (- (point-x p1) x) s)
                     (point-y p1)))
+       (display 3)
        (point x y (point-a p1) (point-b p1)))]
     ))]
   
   
   #:methods gen:multiplicible
   [(define (multiply p1 coefficient)
-     (define (multiply-iter coef result)
+     (display coefficient)(newline)
+     (define zero (point +inf.0 +inf.0 (point-a p1) (point-b p1)))
+     ;(display zero)
+     ; TODO: bit flipping trick here ... best shot at speeding this up ...
+     (define (multiply-iter coef current result)
+       (display coef)(newline)
+       (if (bitwise-and coef 1)
+           (set! result (+ result current))
+           (set! result result))
        (if (= coef 0)
            result
-           (multiply-iter (- coef 1) (+ result p1))))
-     (multiply-iter coefficient (point 0 0)))]
+           (multiply-iter (arithmetic-shift coef -1) (+ current current) (+ result p1))))
+     (multiply-iter coefficient zero))]
   )
+
+(define P (- (- (expt 2 256)
+                (expt 2 32))
+             977))
+(define N #xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141)
+
+; multiplication needs to mod coefficient by N ...
+(define (s256-field-element n) (field-element n P))
+
+(define A (s256-field-element 0))
+(define B (s256-field-element 7))
+
+(define (s256-point x y)
+  (point x y A B))
+
+(define gx #x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)
+(define gy #x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
+
+(define G (s256-point (s256-field-element gx)
+                      (s256-field-element gy)))
+
+(define INF (s256-point +inf.0 +inf.0))
+
+(display (* G 2))
+(display "done")
 
 (provide field-element point + - * / expt)
