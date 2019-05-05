@@ -143,6 +143,18 @@
     "s256 order"
     (check-equal? (point-x (* G N)) +inf.0))
    
+   (test-case
+     "signatures"
+        (define x (s256-field-element #x887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c))
+        (define y (s256-field-element #x61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34))
+        (define pt (s256-point x y))
+        (define z #xec208baa0fc1c19f708a9ca96fdeff3ac3f230bb4a7ba4aede4942ad003c0f60)
+        (define r #xac8d1c87e51d0d441be8b3dd5b05c8795b48875dffe00b7ffcfac23010d3a395)
+        (define s #x68342ceff8935ededd102dd876ffd6ba72d6a427a3edb13d26eb0781cb423c4)
+        (define sig (signature r s))
+        #t
+        (check-true (signature-valid? pt z sig))
+        )
    ))
 
 (run-tests file-tests)

@@ -9,6 +9,8 @@
          )
 (require math)
 
+
+; interfaces
 (define-generics addable
   (add addable _))
 
@@ -24,6 +26,7 @@
 (define-generics divisible
   (divide divisible _))
 
+; FIXME: get rid of this
 (define (enforce-prime-constraint fe1 fe2 caller)
   ; the "caller" variable is a hack ...
   (if (not (= (field-element-prime fe1) (field-element-prime fe2)))
@@ -84,6 +87,8 @@
      (divide x y)]
     [else (error 'add "Can't divide")]))      ; TODO: better error message
 
+; structs
+
 (struct field-element (number prime)
   #:transparent
 
@@ -106,11 +111,13 @@
      ;;; FIXME: python has __mul__ and __rmul__ ...
      ;;; we basically only handle __mul__
      ;;; need to implement integer multiplication                    
+     ; n = exponent % (self.prime - 1)
+     (define prime (field-element-prime fe1))
      (enforce-prime-constraint fe1 fe2 "*")
      (field-element (modulo (* (field-element-number fe1)
                                (field-element-number fe2))
                             (field-element-prime fe1))
-                    (field-element-prime fe1)))]
+                    prime))]
   
   #:methods gen:exponentiatable
   [(define (exponentiate fe exponent)
@@ -136,6 +143,7 @@
               (field-element-prime fe1))
       (field-element-prime fe1)))]
   )
+
 
 (struct point (x y a b)
   #:transparent
@@ -203,6 +211,7 @@
     ))]
   
   
+  ; needs to mod coefficient by N ...
   #:methods gen:multiplicible
   [(define (multiply p coefficient)
      (define zero (point +inf.0 +inf.0 (point-a p) (point-b p)))
@@ -216,35 +225,43 @@
                               (+ result current)
                               result))))
      (fast-multiply coefficient p zero))]
-       
+
+      
   )
 
+(struct signature (r s))
+
+;;; functions
+
+(define (signature-valid? pt z sig)
+  (begin (define s_inv (modular-expt (signature-s sig) (- N 2) N))
+         (define u (modulo (* z s_inv) N))
+         (define v (modulo (* (signature-r sig) s_inv) N))
+         (define total (+ (* u G) (* v pt))))
+  (= (field-element-number (point-x total)) (signature-r sig)))
+
+; constants
 (define P (- (- (expt 2 256)
                 (expt 2 32))
              977))
 (define N #xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141)
-
-; multiplication needs to mod coefficient by N ...
-(define (s256-field-element n) (field-element n P))
-
-(define A (s256-field-element 0))
-(define B (s256-field-element 7))
-
-(define (s256-point x y)
-  (point x y A B))
-
 (define gx #x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)
 (define gy #x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
 
+(define (s256-field-element n) (field-element n P))
+(define A (s256-field-element 0))
+(define B (s256-field-element 7))
+(define (s256-point x y)
+  (point x y A B))
 (define G (s256-point (s256-field-element gx)
                       (s256-field-element gy)))
-
-(define INF (s256-point +inf.0 +inf.0))
-
-;(display (* G 2))
+(define INFINITY (s256-point +inf.0 +inf.0))
 
 
-(provide field-element point + - * / expt N G P
+
+
+(provide field-element s256-field-element point s256-point + - * / expt N G P
+         signature signature-valid? signature-s signature-r
 
          point-x  ; yuck
          )
