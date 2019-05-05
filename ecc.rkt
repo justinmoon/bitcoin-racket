@@ -1,5 +1,6 @@
 #lang racket
 (require racket/generic
+         racket/struct                              ; make-contructor-style-printer
          (only-in racket/base [+ racket:+])
          (only-in racket/base [- racket:-])
          (only-in racket/base [* racket:*])
@@ -85,7 +86,7 @@
 
 (struct field-element (number prime)
   #:transparent
-  
+
   #:methods gen:addable
   [(define (add fe1 fe2)
      (enforce-prime-constraint fe1 fe2 "+")
@@ -144,6 +145,21 @@
                         (equal? (* y y) (+ (+ (expt x 3) (* a x)) b)))    ; hack: + only takes 2 args ...
             (error 'point "not a valid point"))
             (values x y a b))
+
+  #:methods gen:custom-write
+  [(define write-proc
+     (make-constructor-style-printer
+       (lambda (obj) 'point)
+       (lambda (obj) (list 'x:
+                           (field-element-number (point-x obj))
+                           'y:
+                           (field-element-number (point-y obj))
+                           'a:
+                           (field-element-number (point-a obj))
+                           'b:
+                           (field-element-number (point-b obj))
+                           'mod:
+                           (field-element-prime (point-y obj))))))]
   
   #:methods gen:addable
   [(define (add p1 p2)
@@ -227,7 +243,9 @@
 
 ;(display (* G 2))
 
+
 (provide field-element point + - * / expt N G P
 
          point-x  ; yuck
          )
+
