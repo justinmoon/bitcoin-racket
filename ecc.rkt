@@ -7,8 +7,8 @@
          (only-in racket/base [/ racket:/])
          (only-in racket/base [expt racket:expt])
          )
-(require math)
-
+(require (planet williams/science/random-source))
+(require (rename-in math (random-integer randint)))  ; collides with ^^
 
 ; interfaces
 (define-generics addable
@@ -233,7 +233,7 @@
 
 ;;; functions
 
-(define (signature-valid? pt z sig)
+(define (signature-valid? pt sig z)
   (begin (define s_inv (modular-expt (signature-s sig) (- N 2) N))
          (define u (modulo (* z s_inv) N))
          (define v (modulo (* (signature-r sig) s_inv) N))
@@ -257,11 +257,30 @@
                       (s256-field-element gy)))
 (define INFINITY (s256-point +inf.0 +inf.0))
 
+;;; private keys
+
+(struct private-key (secret point))
+
+(define (make-private-key secret) (private-key secret (* secret G)))
+
+(define (sign key z)
+  (begin (define k (random-integer N))
+         (define r (field-element-number (point-x (* k G))))
+         (define k-inv (modular-expt k (- N 2) N))
+         (define inter-s (* (+ z (* r (private-key-secret key)))
+                      (modulo k-inv N)))
+         (define s (if (> inter-s (/ N 2))
+                       (- N inter-s)
+                       inter-s)))
+  
+  (signature r s))
+
 
 
 
 (provide field-element s256-field-element point s256-point + - * / expt N G P
          signature signature-valid? signature-s signature-r
+         make-private-key sign private-key-point private-key-secret
 
          point-x  ; yuck
          )

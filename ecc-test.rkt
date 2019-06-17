@@ -153,9 +153,17 @@
         (define s #x68342ceff8935ededd102dd876ffd6ba72d6a427a3edb13d26eb0781cb423c4)
         (define sig (signature r s))
         #t
-        (check-true (signature-valid? pt z sig))
+        (check-true (signature-valid? pt sig z))
         )
-   ))
+
+  (test-case
+   "sign and verify"
+   (define key (make-private-key 10))
+   (define z 50)
+   (define sig (sign key z))
+   (check-true (signature-valid? (private-key-point key) sig z)))
+  )
+ )
 
 (run-tests file-tests)
 
